@@ -44,5 +44,5 @@ def plot_freqs(x, y, title, xlabel, ylabel):
     plt.tight_layout()
     plt.show()
 
-data, f_transform, amplitude, f, sample_rate = transform('40hz.wav')
+data, f_transform, amplitude, f, sample_rate = transform('25hz_40hz.wav')
 plot_freqs(f, amplitude,  'Magnitude vs Frequencies', 'Frequency [Hz]', 'Magnitude')
