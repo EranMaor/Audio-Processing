@@ -24,14 +24,16 @@ def transform(file_name):
 
     return data, f_transform, amplitude, f, sample_rate
 
-def plot(x, y, title, xlabel, ylabel):
+def plot(x, y, title, xlabel, ylabel, xmax=23000):
     plt.figure(figsize=(10, 4))
     plt.title(title)
     plt.ylabel(ylabel)
     plt.xlabel(xlabel)
+    plt.gca().set_xbound(upper=xmax)
     plt.plot(x, y)
     plt.tight_layout()
     plt.show()
+
 
 def plot_freqs(x, y, title, xlabel, ylabel):
     plt.figure(figsize=(10, 4))
