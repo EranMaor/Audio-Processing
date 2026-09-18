@@ -4,7 +4,7 @@ import sounddevice as sd
 from scipy.fft import rfftfreq
 
 from file_operations import read_mono, write_file
-from manipulation import time_to_frequency, harmonics, filter as freq_filter
+from manipulation import time_to_frequency, nld, filter as freq_filter
 from helper import plot
 
 mono_data, _, sample_rate = read_mono("original_songs/best_part.wav")
@@ -27,6 +27,6 @@ highs = freq_filter(sample_rate=sample_rate, time_signal=segment.copy(), min_fre
 hpf_file_name = f"hpf_songs/best_part_{start_sec}-{end_sec}_hpf.wav"
 write_file(highs, np.zeros_like(highs), sample_rate, hpf_file_name)
 
-left, right, _, sample_rate = harmonics(output_file_name, speaker_threshold_freq=100, lower_threshold_freq=40, upper_threshold_freq=80, a=0, b=1.5, c=0.4)
+left, right, _, sample_rate = nld(output_file_name, speaker_threshold_freq=100, lower_threshold_freq=40, bin_band=10, a=0, b=1.5, c=0.4, B=[1,1,1,1,1,1], w=[1,1,1,1,1,1], device_type='f_p')
 enhanced_file_name = f"enhanced_songs/best_part_{start_sec}-{end_sec}_harmonics.wav"
 write_file(left, right, sample_rate, enhanced_file_name)
