@@ -49,7 +49,7 @@ def time_to_frequency(data):
 # a: DC offset
 # b: Produces odd harmonics
 # c: Produces even harmonics
-def harmonics(input_file_name, speaker_threshold_freq=500, a=0, b=1.5, c=0.4):
+def harmonics(input_file_name, speaker_threshold_freq=100, lower_threshold_freq=40, upper_threshold_freq=80, a=0, b=1.5, c=0.4):
     data, f, sample_rate = read_mono(input_file_name)
 
     # Apply HPF to isolate mids/highs in the left channel 
@@ -57,10 +57,10 @@ def harmonics(input_file_name, speaker_threshold_freq=500, a=0, b=1.5, c=0.4):
 
     # Step 1 of bass frequency processing:
     # Apply BPF to isolate original lows (within audible range) in right channel
-    # (could use LPF, but <20hz frequencies are not audible anyways)
+    # May change parameter but using BPF from 100hz to speaker_threshold_freq
     #
     # Normalize amplitudes to range +- k (divide by max amplitude and multiply by k) to optimize harmonic saturation
-    bpf_low = filter(sample_rate=sample_rate, time_signal=data.copy(), min_freq=20, max_freq=speaker_threshold_freq, filter='bpf', filter_order=4)
+    bpf_low = filter(sample_rate=sample_rate, time_signal=data.copy(), min_freq=lower_threshold_freq, max_freq=speaker_threshold_freq, filter='bpf', filter_order=4)
     max_amplitude = np.max(np.abs(bpf_low)) or 1
     k = 2.5
     right1 = bpf_low / max_amplitude * k
@@ -73,7 +73,7 @@ def harmonics(input_file_name, speaker_threshold_freq=500, a=0, b=1.5, c=0.4):
 
     # Step 3 of bass frequency processing:
     # Apply another BPF on right channel to limit number of harmonics
-    right = filter(sample_rate=sample_rate, time_signal=right1.copy(), min_freq=100, max_freq=2000, filter='bpf', filter_order=8)
+    right = filter(sample_rate=sample_rate, time_signal=right1.copy(), min_freq=upper_threshold_freq, max_freq=3*speaker_threshold_freq, filter='bpf', filter_order=8)
 
     # Step 4 of bass frequency processing:
     # Normalize right channel to match left channel peak amplitude

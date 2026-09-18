@@ -4,7 +4,7 @@ import sounddevice as sd
 from scipy.fft import rfftfreq
 
 from file_operations import read_mono, write_file
-from manipulation import time_to_frequency
+from manipulation import time_to_frequency, harmonics, filter as freq_filter
 from helper import plot
 
 mono_data, _, sample_rate = read_mono("original_songs/best_part.wav")
@@ -19,23 +19,14 @@ segment = mono_data[start_sample:end_sample]
 output_file_name = f"segmented_songs/best_part_{start_sec}-{end_sec}.wav"
 write_file(segment, segment, sample_rate, output_file_name)
 
-# Play the segment through the speakers while recording the microphone
-playback = np.stack((segment, segment), axis=1).astype(np.float32) / 32768.0
-input("Press Enter to play the segment and record the microphone...")
-print(f"Playing and recording for {end_sec - start_sec} seconds...")
-recording = sd.playrec(playback, samplerate=sample_rate, channels=1)
-sd.wait()
-print("Recording finished.")
+single_channel_file_name = f"single_channel_songs/best_part_{start_sec}-{end_sec}_single_channel.wav"
+write_file(segment, np.zeros_like(segment), sample_rate, single_channel_file_name)
 
-recording = recording.flatten().astype(np.float64) * 32767.0
-recording_file_name = f"calibration/best_part_{start_sec}-{end_sec}_recording.wav"
-write_file(recording, recording, sample_rate, recording_file_name)
 
-f = rfftfreq(len(segment), 1 / sample_rate)
-frequency_data = time_to_frequency(segment)
-plot(f, frequency_data, f"Frequency Spectrum ({start_sec}-{end_sec} s)", "Frequency (Hz)", "Amplitude")
+highs = freq_filter(sample_rate=sample_rate, time_signal=segment.copy(), min_freq=100, filter='hpf', filter_order=4)
+hpf_file_name = f"hpf_songs/best_part_{start_sec}-{end_sec}_hpf.wav"
+write_file(highs, np.zeros_like(highs), sample_rate, hpf_file_name)
 
-recording_f = rfftfreq(len(recording), 1 / sample_rate)
-recording_frequency_data = time_to_frequency(recording)
-plot(recording_f, recording_frequency_data, f"Recorded Spectrum ({start_sec}-{end_sec} s)", "Frequency (Hz)", "Amplitude")
-plt.show()
+left, right, _, sample_rate = harmonics(output_file_name, speaker_threshold_freq=100, lower_threshold_freq=40, upper_threshold_freq=80, a=0, b=1.5, c=0.4)
+enhanced_file_name = f"enhanced_songs/best_part_{start_sec}-{end_sec}_harmonics.wav"
+write_file(left, right, sample_rate, enhanced_file_name)
